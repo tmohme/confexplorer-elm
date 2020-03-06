@@ -38,17 +38,26 @@ view : Model -> Html Msg
 view _ =
     div []
         [ h1 [] [ text "KotlinConf Explorer" ]
-        , div []
-            [ h3 [] [ text "Videos to watch" ]
-            , div [] <| map (\v -> p [] [ text v.title ]) unwatchedVideos
-            , h3 [] [ text "Videos watched" ]
-            , div [] <| map (\v -> p [] [ text v.title ]) watchedVideos
-            ]
+        , viewVideoList "Videos to watch" unwatchedVideos
+        , viewVideoList "Videos watched" watchedVideos
         , div [ css [ position absolute, top (px 10), right (px 10) ] ]
             [ h3 [] [ text "John Doe: Building and breaking things" ]
             , img [ src "https://via.placeholder.com/640x360.png?text=Video+Player+Placeholder" ] []
             ]
         ]
+
+
+viewVideoList : String -> List Video -> Html Msg
+viewVideoList title videos =
+    div []
+        [ h3 [] [ text title ]
+        , div [] <| map viewVideo videos
+        ]
+
+
+viewVideo : Video -> Html Msg
+viewVideo video =
+    p [] [ text (video.speaker ++ ": " ++ video.title) ]
 
 
 update _ model =
