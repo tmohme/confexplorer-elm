@@ -1,8 +1,9 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, div, h1, h3, img, p, text)
-import Html.Attributes exposing (src)
+import Css exposing (absolute, position, px, right, top)
+import Html.Styled exposing (Html, div, h1, h3, img, p, text, toUnstyled)
+import Html.Styled.Attributes exposing (css, src)
 
 
 type alias Model =
@@ -25,8 +26,9 @@ view _ =
             , h3 [] [ text "Videos to watched" ]
             , p [] [ text "Tom Jerry: Mouseless development" ]
             ]
-        , div []
-            [ img [ src "https://via.placeholder.com/640x360.png?text=Video+Player+Placeholder" ] []
+        , div [ css [ position absolute, top (px 10), right (px 10) ] ]
+            [ h3 [] [ text "John Doe: Building and breaking things" ]
+            , img [ src "https://via.placeholder.com/640x360.png?text=Video+Player+Placeholder" ] []
             ]
         ]
 
@@ -40,5 +42,5 @@ main =
     Browser.sandbox
         { init = Model
         , update = update
-        , view = view
+        , view = view >> toUnstyled
         }
