@@ -4,6 +4,7 @@ import Browser
 import Css exposing (absolute, position, px, right, top)
 import Html.Styled exposing (Html, div, h1, h3, img, p, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, src)
+import Html.Styled.Events exposing (onClick)
 import List exposing (map)
 
 
@@ -20,7 +21,7 @@ type alias Model =
 
 
 type Msg
-    = Msg
+    = Clicked Video
 
 
 unwatchedVideos =
@@ -57,11 +58,14 @@ viewVideoList title videos =
 
 viewVideo : Video -> Html Msg
 viewVideo video =
-    p [] [ text (video.speaker ++ ": " ++ video.title) ]
+    p [ onClick <| Clicked video ] [ text (video.speaker ++ ": " ++ video.title) ]
 
 
-update _ model =
-    model
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Clicked video ->
+            Debug.log ("clicked: " ++ video.title) model
 
 
 main : Program () Model Msg
