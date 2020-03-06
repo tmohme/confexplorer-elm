@@ -17,7 +17,7 @@ type alias Video =
 
 
 type alias Model =
-    {}
+    { selected : Maybe Video }
 
 
 type Msg
@@ -36,11 +36,11 @@ watchedVideos =
 
 
 view : Model -> Html Msg
-view _ =
+view model =
     div []
         [ h1 [] [ text "KotlinConf Explorer" ]
-        , viewVideoList "Videos to watch" unwatchedVideos
-        , viewVideoList "Videos watched" watchedVideos
+        , viewVideoList "Videos to watch" unwatchedVideos model.selected
+        , viewVideoList "Videos watched" watchedVideos model.selected
         , div [ css [ position absolute, top (px 10), right (px 10) ] ]
             [ h3 [] [ text "John Doe: Building and breaking things" ]
             , img [ src "https://via.placeholder.com/640x360.png?text=Video+Player+Placeholder" ] []
@@ -48,30 +48,47 @@ view _ =
         ]
 
 
-viewVideoList : String -> List Video -> Html Msg
-viewVideoList title videos =
+viewVideoList : String -> List Video -> Maybe Video -> Html Msg
+viewVideoList title videos selectedVideo =
     div []
         [ h3 [] [ text title ]
-        , div [] <| map viewVideo videos
+        , div [] <| map (viewVideo selectedVideo) videos
         ]
 
 
-viewVideo : Video -> Html Msg
-viewVideo video =
-    p [ onClick <| Clicked video ] [ text (video.speaker ++ ": " ++ video.title) ]
+viewVideo : Maybe Video -> Video -> Html Msg
+viewVideo selectedVideo video =
+    let
+        selectionMarker =
+            case selectedVideo of
+                Nothing ->
+                    ""
+
+                Just aVideo ->
+                    if video == aVideo then
+                        "▶"
+
+                    else
+                        ""
+    in
+    p [ onClick <| Clicked video ] [ text (selectionMarker ++ video.speaker ++ ": " ++ video.title) ]
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         Clicked video ->
-            Debug.log ("clicked: " ++ video.title) model
+            { model | selected = Just video }
+
+
+initialModel =
+    { selected = Nothing }
 
 
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = Model
+        { init = initialModel
         , update = update
         , view = view >> toUnstyled
         }
