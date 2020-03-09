@@ -3,15 +3,18 @@ module Main exposing (..)
 import Browser
 import Html.Styled exposing (Html, div, h1, h3, p, text, toUnstyled)
 import Html.Styled.Events exposing (onClick)
+import Http
 import List exposing (map)
 import Model exposing (Model)
-import Video exposing (Video)
+import String exposing (fromInt)
+import Video exposing (Video, videoDecoder)
 import VideoPlayer
 
 
 type Msg
     = Clicked Video
     | VideoPlayerMsg VideoPlayer.Msg
+    | VideoLoaded (Result Http.Error Video)
 
 
 view : Model -> Html.Styled.Html Msg
@@ -64,14 +67,25 @@ viewVideo selectedVideo video =
     p [ onClick <| Clicked video ] [ text (selectionMarker ++ video.speaker ++ ": " ++ video.title) ]
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Clicked video ->
-            { model | currentVideo = Just video }
+            ( { model | currentVideo = Just video }, Cmd.none )
 
         VideoPlayerMsg videoPlayerMsg ->
-            VideoPlayer.update videoPlayerMsg (toggleVideo model)
+            ( VideoPlayer.update videoPlayerMsg (toggleVideo model), Cmd.none )
+
+        VideoLoaded (Ok video) ->
+            let
+                unwatchedVideos =
+                    (video :: model.unwatchedVideos) |> List.sortBy (\v -> v.id)
+            in
+            ( { model | unwatchedVideos = unwatchedVideos }, Cmd.none )
+
+        {- No handling of any errors as the KotlinJS also ignores any errors -}
+        VideoLoaded (Err _) ->
+            ( model, Cmd.none )
 
 
 toggleVideo : Model -> Video -> Model
@@ -91,28 +105,35 @@ toggle video videos =
         video :: videos
 
 
-initiallyUnwatchedVideos =
-    [ Video 1 "Building and breaking things" "John Doe" "jl1tGiUiTtI"
-    , Video 2 "The development process" "Jane Smith" "jl1tGiUiTtI"
-    , Video 3 "The Web 7.0" "Matt Miller" "jl1tGiUiTtI"
-    ]
-
-
-initiallyWatchedVideos =
-    [ Video 4 "Mouseless development" "Tom Jerry" "jl1tGiUiTtI" ]
-
-
 initialModel =
     { currentVideo = Nothing
-    , watchedVideos = initiallyWatchedVideos
-    , unwatchedVideos = initiallyUnwatchedVideos
+    , watchedVideos = []
+    , unwatchedVideos = []
     }
+
+
+init : () -> ( Model, Cmd Msg )
+init _ =
+    let
+        fetchVideos =
+            List.map fetchVideo (List.range 1 25)
+    in
+    ( initialModel, Cmd.batch fetchVideos )
+
+
+fetchVideo : Int -> Cmd Msg
+fetchVideo id =
+    Http.get
+        { url = "https://my-json-server.typicode.com/kotlin-hands-on/kotlinconf-json/videos/" ++ fromInt id
+        , expect = Http.expectJson VideoLoaded videoDecoder
+        }
 
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = initialModel
+    Browser.element
+        { init = init
+        , subscriptions = \_ -> Sub.none
         , update = update
         , view = view >> toUnstyled
         }

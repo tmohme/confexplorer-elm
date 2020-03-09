@@ -35,7 +35,7 @@ view video watched =
     div [ css [ position absolute, top (px 10), right (px 10) ] ]
         [ h3 [] [ text (video.speaker ++ ": " ++ video.title) ]
         , button [ css [ display block, backgroundColor buttonColor ], onClick (ToggleButtonClicked video) ] [ text buttonText ]
-        , Embed.Youtube.fromString video.videoUrl
+        , Embed.Youtube.fromString (Video.identifierOf video)
             |> Embed.Youtube.attributes
                 [ Embed.Youtube.Attributes.width 640
                 , Embed.Youtube.Attributes.height 360
